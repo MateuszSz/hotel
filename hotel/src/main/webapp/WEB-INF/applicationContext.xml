@@ -1,0 +1,139 @@
+<beans:beans xmlns:beans="http://www.springframework.org/schema/beans"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xmlns:tx="http://www.springframework.org/schema/tx"
+             xmlns:context="http://www.springframework.org/schema/context"
+             xmlns="http://www.springframework.org/schema/security"
+             xsi:schemaLocation="http://www.springframework.org/schema/beans
+	http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+	http://www.springframework.org/schema/security
+	http://www.springframework.org/schema/security/spring-security-3.2.xsd http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+
+
+    <context:component-scan base-package="com.szymczak.controller">
+        <context:exclude-filter type="annotation" expression="org.springframework.stereotype.Controller"/>
+        <context:exclude-filter type="annotation"
+                                expression="org.springframework.web.bind.annotation.ControllerAdvice"/>
+    </context:component-scan>
+
+    <context:property-placeholder location="classpath*:application.properties"/>
+
+    <beans:bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+        <beans:property name="prefix" value="/jsp/"/>
+        <beans:property name="suffix" value=".jsp"/>
+    </beans:bean>
+
+    <beans:bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource">
+        <beans:property name="driverClassName" value="${database.connection.driver}"/>
+        <beans:property name="url" value="${database.connection.url}"/>
+        <beans:property name="username" value="${database.user.name}"/>
+        <beans:property name="password" value="${database.user.password}"/>
+        <beans:property name="validationQuery" value="SELECT 1"/>
+    </beans:bean>
+
+    <beans:bean id="sessionFactory" class="org.springframework.orm.hibernate4.LocalSessionFactoryBean">
+        <beans:property name="dataSource" ref="dataSource"/>
+        <beans:property name="packagesToScan" value="com.szymczak.model"/>
+        <beans:property name="hibernateProperties">
+            <beans:props>
+                <beans:prop key="hibernate.dialect">org.hibernate.dialect.MySQL5Dialect</beans:prop>
+                <beans:prop key="hibernate.show_sql">${hibernate.show_sql}</beans:prop>
+                <beans:prop key="hibernate.hbm2ddl.auto">${hibernate.hbm2ddl.auto}</beans:prop>
+                <beans:prop key="hibernate.connection.url">${database.connection.url}</beans:prop>
+                <beans:prop key="hibernate.connection.driver_class">${database.connection.driver}</beans:prop>
+            </beans:props>
+        </beans:property>
+    </beans:bean>
+
+    <beans:bean id="transactionManager" class="org.springframework.orm.hibernate4.HibernateTransactionManager">
+        <beans:property name="sessionFactory" ref="sessionFactory"/>
+    </beans:bean>
+
+    <tx:annotation-driven transaction-manager="transactionManager"/>
+
+
+    <beans:bean id="personRepository" class="com.szymczak.repository.PersonRepositoryImpl">
+        <beans:constructor-arg ref="sessionFactory"/>
+    </beans:bean>
+
+    <beans:bean id="roomRepository" class="com.szymczak.repository.RoomRepositoryImpl">
+        <beans:constructor-arg ref="sessionFactory"/>
+    </beans:bean>
+
+    <beans:bean id="roleRepository" class="com.szymczak.repository.RoleRepositoryImpl">
+        <beans:constructor-arg ref="sessionFactory"/>
+    </beans:bean>
+
+    <beans:bean id="reservationRepository" class="com.szymczak.repository.ReservationRepositoryImpl">
+        <beans:constructor-arg ref="sessionFactory"/>
+    </beans:bean>
+
+    <beans:bean id="breakfastDateRepository" class="com.szymczak.repository.BreakfastDateRepositoryImpl">
+        <beans:constructor-arg ref="sessionFactory"/>
+    </beans:bean>
+
+
+    <beans:bean id="personService" class="com.szymczak.service.PersonServiceImpl">
+        <beans:constructor-arg ref="personRepository"/>
+    </beans:bean>
+
+
+    <beans:bean id="roomService" class="com.szymczak.service.RoomServiceImpl">
+        <beans:constructor-arg ref="roomRepository"/>
+    </beans:bean>
+
+    <beans:bean id="roleService" class="com.szymczak.service.RoleServiceImpl">
+        <beans:constructor-arg ref="roleRepository"/>
+    </beans:bean>
+
+    <beans:bean id="reservationService" class="com.szymczak.service.ReservationServiceImpl">
+        <beans:constructor-arg ref="reservationRepository"/>
+    </beans:bean>
+
+    <beans:bean id="breakfastDateService" class="com.szymczak.service.BreakfastDateServiceImpl">
+        <beans:constructor-arg ref="breakfastDateRepository"/>
+    </beans:bean>
+
+    <beans:bean id="dateHandler" class="com.szymczak.handler.DateHandler">
+        <beans:constructor-arg value="yyyy-MM-dd"/>
+    </beans:bean>
+
+
+    <beans:bean id="initService" class="com.szymczak.service.InitServiceImpl">
+        <beans:constructor-arg ref="personRepository"/>
+        <beans:constructor-arg ref="reservationRepository"/>
+        <beans:constructor-arg ref="roomRepository"/>
+        <beans:constructor-arg ref="roleRepository"/>
+        <beans:constructor-arg ref="breakfastDateRepository"/>
+    </beans:bean>
+
+
+    <beans:bean id="logoutSuccessHandler" class="com.szymczak.security.CustomLogoutSuccessHandler">
+        <beans:constructor-arg value="/logoutUser"/>
+    </beans:bean>
+    <beans:bean id="encoder" class="org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder">
+        <beans:constructor-arg name="strength" value="11"/>
+    </beans:bean>
+
+    <http auto-config="true" use-expressions="true">
+        <intercept-url pattern="/login" access="permitAll"/>
+        <intercept-url pattern="/favicon.ico" access="permitAll"/>
+        <intercept-url pattern="/resources/**" access="permitAll"/>
+        <intercept-url pattern="/logout" access="permitAll"/>
+        <intercept-url pattern="/logoutUser" access="permitAll"/>
+        <intercept-url pattern="/register" access="permitAll"/>
+        <intercept-url pattern="/registerNewUser" access="permitAll"/>
+        <intercept-url pattern="/**" access="hasAnyRole('CLIENT')"/>
+        <form-login login-page='/login'/>
+        <logout logout-url="/logout" success-handler-ref="logoutSuccessHandler"/>
+    </http>
+
+    <authentication-manager alias="authenticationManager">
+        <authentication-provider>
+            <password-encoder ref="encoder"/>
+            <jdbc-user-service data-source-ref="dataSource"
+                               users-by-username-query="SELECT person.email, person.password, 1 FROM person WHERE person.email = ?"
+                               authorities-by-username-query="SELECT person.email, role.name FROM person, role, person_role WHERE person_role.people_id = person.id AND person_role.roles_id = role.id AND person.email = ? "/>
+        </authentication-provider>
+    </authentication-manager>
+
+</beans:beans>

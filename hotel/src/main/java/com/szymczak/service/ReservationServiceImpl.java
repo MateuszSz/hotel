@@ -1,0 +1,46 @@
+package com.szymczak.service;
+
+import com.szymczak.dto.ReservationDto;
+import com.szymczak.model.Reservation;
+import com.szymczak.model.WindowsOrientation;
+import com.szymczak.repository.ReservationRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+/**
+ * Created by mateu on 12.05.2017.
+ */
+@Service
+public class ReservationServiceImpl implements ReservationService {
+
+    private final ReservationRepository reservationRepository;
+
+    @Autowired
+    public ReservationServiceImpl(ReservationRepository reservationRepository) {
+        this.reservationRepository = reservationRepository;
+    }
+
+    public void insertOrUpdate(Reservation reservation) {
+        reservationRepository.insertOrUpdate(reservation);
+    }
+
+    public Reservation display(int id) {
+        return reservationRepository.display(id);
+    }
+
+    public List<ReservationDto> findReservationsByPersonEmail(String email) {
+
+        List<ReservationDto> reservationDtos = reservationRepository.findReservationsByPersonEmail(email);
+        String windowOrientation;
+        for (ReservationDto reservationDto : reservationDtos) {
+            windowOrientation = reservationDto.getWindowsOrientation();
+            reservationDto.setWindowsOrientation(WindowsOrientation.valueOf(windowOrientation).getDisplayName());
+        }
+
+        return reservationDtos;
+    }
+
+
+}
