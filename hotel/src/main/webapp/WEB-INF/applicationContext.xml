@@ -3,10 +3,12 @@
              xmlns:tx="http://www.springframework.org/schema/tx"
              xmlns:context="http://www.springframework.org/schema/context"
              xmlns="http://www.springframework.org/schema/security"
+             xmlns:jdbc="http://www.springframework.org/schema/jdbc"
+             xmlns:jpa="http://www.springframework.org/schema/data/jpa"
              xsi:schemaLocation="http://www.springframework.org/schema/beans
 	http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
 	http://www.springframework.org/schema/security
-	http://www.springframework.org/schema/security/spring-security-3.2.xsd http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+	http://www.springframework.org/schema/security/spring-security-3.2.xsd http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd http://www.springframework.org/schema/jdbc http://www.springframework.org/schema/jdbc/spring-jdbc.xsd http://www.springframework.org/schema/data/jpa http://www.springframework.org/schema/data/jpa/spring-jpa.xsd">
 
 
     <context:component-scan base-package="com.szymczak.controller">
@@ -22,6 +24,10 @@
         <beans:property name="suffix" value=".jsp"/>
     </beans:bean>
 
+    <!--<jdbc:embedded-database id="dataSource1" type="HSQL">-->
+        <!--&lt;!&ndash;<jdbc:script location="classpath:db/sql/create-db.sql" />&ndash;&gt;-->
+    <!--</jdbc:embedded-database>-->
+
     <beans:bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource">
         <beans:property name="driverClassName" value="${database.connection.driver}"/>
         <beans:property name="url" value="${database.connection.url}"/>
@@ -30,80 +36,69 @@
         <beans:property name="validationQuery" value="SELECT 1"/>
     </beans:bean>
 
-    <beans:bean id="sessionFactory" class="org.springframework.orm.hibernate4.LocalSessionFactoryBean">
+    <beans:bean id="entityManagerFactory" class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
         <beans:property name="dataSource" ref="dataSource"/>
         <beans:property name="packagesToScan" value="com.szymczak.model"/>
-        <beans:property name="hibernateProperties">
-            <beans:props>
+        <beans:property name="jpaVendorAdapter">
+            <beans:bean class="org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter">
+                <beans:property name="showSql" value="false" />
+                <beans:property name="databasePlatform" value="org.hibernate.dialect." />
+            </beans:bean>
+        </beans:property>
+            <beans:property name="jpaProperties">
+                <beans:props>
                 <beans:prop key="hibernate.dialect">org.hibernate.dialect.MySQL5Dialect</beans:prop>
                 <beans:prop key="hibernate.show_sql">${hibernate.show_sql}</beans:prop>
                 <beans:prop key="hibernate.hbm2ddl.auto">${hibernate.hbm2ddl.auto}</beans:prop>
                 <beans:prop key="hibernate.connection.url">${database.connection.url}</beans:prop>
                 <beans:prop key="hibernate.connection.driver_class">${database.connection.driver}</beans:prop>
-            </beans:props>
+                </beans:props>
         </beans:property>
     </beans:bean>
 
-    <beans:bean id="transactionManager" class="org.springframework.orm.hibernate4.HibernateTransactionManager">
-        <beans:property name="sessionFactory" ref="sessionFactory"/>
+    <beans:bean class="org.springframework.orm.jpa.support.PersistenceAnnotationBeanPostProcessor" />
+    <beans:bean class="org.springframework.dao.annotation.PersistenceExceptionTranslationPostProcessor" />
+    <beans:bean id="transactionManager" class="org.springframework.orm.jpa.JpaTransactionManager">
+        <beans:property name="entityManagerFactory" ref="entityManagerFactory" />
     </beans:bean>
+    <!--<beans:bean id="transactionManager" class="org.springframework.orm.hibernate4.HibernateTransactionManager">-->
+        <!--<beans:property name="sessionFactory" ref="sessionFactory"/>-->
+    <!--</beans:bean>-->
+
+    <jpa:repositories base-package="com.szymczak.repository"/>
 
     <tx:annotation-driven transaction-manager="transactionManager"/>
 
 
-    <beans:bean id="personRepository" class="com.szymczak.repository.PersonRepositoryImpl">
-        <beans:constructor-arg ref="sessionFactory"/>
-    </beans:bean>
 
-    <beans:bean id="roomRepository" class="com.szymczak.repository.RoomRepositoryImpl">
-        <beans:constructor-arg ref="sessionFactory"/>
-    </beans:bean>
 
-    <beans:bean id="roleRepository" class="com.szymczak.repository.RoleRepositoryImpl">
-        <beans:constructor-arg ref="sessionFactory"/>
-    </beans:bean>
-
-    <beans:bean id="reservationRepository" class="com.szymczak.repository.ReservationRepositoryImpl">
-        <beans:constructor-arg ref="sessionFactory"/>
-    </beans:bean>
-
-    <beans:bean id="breakfastDateRepository" class="com.szymczak.repository.BreakfastDateRepositoryImpl">
-        <beans:constructor-arg ref="sessionFactory"/>
+    <beans:bean id="personService" class="com.szymczak.service.PersonService">
     </beans:bean>
 
 
-    <beans:bean id="personService" class="com.szymczak.service.PersonServiceImpl">
-        <beans:constructor-arg ref="personRepository"/>
+    <beans:bean id="roomService" class="com.szymczak.service.RoomService">
+
     </beans:bean>
 
+    <beans:bean id="roleService" class="com.szymczak.service.RoleService">
 
-    <beans:bean id="roomService" class="com.szymczak.service.RoomServiceImpl">
-        <beans:constructor-arg ref="roomRepository"/>
     </beans:bean>
 
-    <beans:bean id="roleService" class="com.szymczak.service.RoleServiceImpl">
-        <beans:constructor-arg ref="roleRepository"/>
+    <beans:bean id="reservationService" class="com.szymczak.service.ReservationService">
+
     </beans:bean>
 
-    <beans:bean id="reservationService" class="com.szymczak.service.ReservationServiceImpl">
-        <beans:constructor-arg ref="reservationRepository"/>
-    </beans:bean>
+    <beans:bean id="breakfastDateService" class="com.szymczak.service.BreakfastDateService">
 
-    <beans:bean id="breakfastDateService" class="com.szymczak.service.BreakfastDateServiceImpl">
-        <beans:constructor-arg ref="breakfastDateRepository"/>
     </beans:bean>
 
     <beans:bean id="dateHandler" class="com.szymczak.handler.DateHandler">
         <beans:constructor-arg value="yyyy-MM-dd"/>
     </beans:bean>
+    <beans:bean id="dtoMaper" class="com.szymczak.maper.DtoMaper" />
 
 
-    <beans:bean id="initService" class="com.szymczak.service.InitServiceImpl">
-        <beans:constructor-arg ref="personRepository"/>
-        <beans:constructor-arg ref="reservationRepository"/>
-        <beans:constructor-arg ref="roomRepository"/>
-        <beans:constructor-arg ref="roleRepository"/>
-        <beans:constructor-arg ref="breakfastDateRepository"/>
+    <beans:bean id="initService" class="com.szymczak.service.InitService">
     </beans:bean>
 
 

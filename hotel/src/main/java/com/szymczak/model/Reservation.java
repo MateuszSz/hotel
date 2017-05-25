@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.Proxy;
 
 import javax.persistence.*;
 import java.sql.Date;
@@ -18,6 +19,8 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
+@Proxy(lazy = false)
+
 public class Reservation {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -27,13 +30,13 @@ public class Reservation {
     private Boolean isWithBreakfast;
 
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     private Person person;
 
-    @ManyToMany(mappedBy = "reservations")
+    @ManyToMany(mappedBy = "reservations",fetch = FetchType.EAGER)
     private Set<Room> rooms = new HashSet<Room>(0);
 
-    @OneToMany(mappedBy = "reservation", orphanRemoval = true)
+    @OneToMany(mappedBy = "reservation", orphanRemoval = true, fetch = FetchType.EAGER)
     private Set<BreakfastDate> breakfastDates = new HashSet<BreakfastDate>(0);
 
     public Reservation(Date startDate, Date finishDate, Boolean isWithBreakfast) {

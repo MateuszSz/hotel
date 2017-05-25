@@ -2,7 +2,7 @@ package com.szymczak.service;
 
 import com.szymczak.dto.ReservationDto;
 import com.szymczak.model.Reservation;
-import com.szymczak.repository.ReservationRepositoryImpl;
+import com.szymczak.repository.ReservationRepository;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -25,7 +25,7 @@ import static org.mockito.Mockito.when;
 public class ReservationServiceImplTest {
 
     @Mock
-    private ReservationRepositoryImpl reservationRepository;
+    private ReservationRepository reservationRepository;
 
     @Mock
     private Reservation expectedReservation;
@@ -38,15 +38,15 @@ public class ReservationServiceImplTest {
 
         List<ReservationDto> expectedListOfReservationDto = Arrays.asList(expectedReservationDto, expectedReservationDto);
 
-        when(reservationRepository.display(Matchers.anyInt())).thenReturn(expectedReservation);
+        when(reservationRepository.findOne(Matchers.anyInt())).thenReturn(expectedReservation);
         when(reservationRepository.findReservationsByPersonEmail(Matchers.anyString())).thenReturn(expectedListOfReservationDto);
-        Mockito.doNothing().when(reservationRepository).insertOrUpdate(expectedReservation);
+        Mockito.doNothing().when(reservationRepository).save(expectedReservation);
     }
 
     @Test
     public void testDisplay() throws Exception {
 
-        Reservation actualReservation = reservationRepository.display(1);
+        Reservation actualReservation = reservationRepository.findOne(1);
 
         assertNotNull(actualReservation);
         assertEquals(expectedReservation.getBreakfastDates(), actualReservation.getBreakfastDates());
@@ -74,7 +74,7 @@ public class ReservationServiceImplTest {
 
     @Test
     public void testInsertOrUpdate() {
-        reservationRepository.insertOrUpdate(expectedReservation);
+        reservationRepository.save(expectedReservation);
     }
 
 

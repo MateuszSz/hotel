@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.Proxy;
 
 import javax.persistence.*;
 import java.sql.Date;
@@ -16,6 +17,7 @@ import java.sql.Date;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
+@Proxy(lazy = false)
 public class BreakfastDate {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -23,7 +25,7 @@ public class BreakfastDate {
     private int numberOfPeople;
     private Date date;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     private Reservation reservation;
 
     public BreakfastDate(int numberOfPeople, Date date) {

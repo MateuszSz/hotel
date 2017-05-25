@@ -1,15 +1,9 @@
 package com.szymczak.repository;
 
 import com.szymczak.model.Role;
+import org.springframework.data.repository.CrudRepository;
 
 
-/**
- * Created by mateu on 12.05.2017.
- */
-public interface RoleRepository {
-    void insertOrUpdate(Role role);
-
-    Role display(int id);
-
+public interface RoleRepository extends CrudRepository<Role, Integer> {
     Role findByName(String name);
 }

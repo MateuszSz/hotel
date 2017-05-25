@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
 import java.security.Principal;
+import java.text.ParseException;
 
 /**
  * Created by mateu on 11.05.2017.
@@ -45,7 +46,7 @@ public class SecurityController {
 
 
     @RequestMapping(value = {"/index", ""})
-    public String index(ModelMap model, Principal principal) {
+    public String index(ModelMap model, Principal principal) throws ParseException {
         model.addAttribute("breakfastDates", breakfastDateService.displayDatesByPersonEmail(principal.getName()));
         model.addAttribute("reservations", reservationService.findReservationsByPersonEmail(principal.getName()));
         return "index";

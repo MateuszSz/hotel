@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.Proxy;
 
 import javax.persistence.*;
 import java.util.HashSet;
@@ -15,6 +16,7 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
+@Proxy(lazy = false)
 public class Person {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -25,10 +27,10 @@ public class Person {
     private String name;
 
 
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
     private Set<Role> roles = new HashSet<Role>(0);
 
-    @OneToMany(mappedBy = "person", orphanRemoval = true)
+    @OneToMany(mappedBy = "person", orphanRemoval = true, fetch = FetchType.EAGER)
     private Set<Reservation> reservations = new HashSet<Reservation>(0);
 
 

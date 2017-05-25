@@ -2,8 +2,10 @@ package com.szymczak.service;
 
 import com.szymczak.model.*;
 import com.szymczak.repository.*;
+import com.szymczak.repository.RoleRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.repository.CrudRepository;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -17,23 +19,21 @@ import java.util.Random;
  */
 @Service
 @Slf4j
-public class InitServiceImpl {
-
-    private final PersonRepository personRepository;
-    private final ReservationRepository reservationRepository;
-    private final BreakfastDateRepository breakfastDateRepository;
-    private final RoomRepository roomRepository;
-    private final RoleRepository roleRepository;
+public class InitService {
 
 
     @Autowired
-    public InitServiceImpl(PersonRepository personRepository, ReservationRepository reservationRepository, BreakfastDateRepository breakfastDateRepository, RoomRepository roomRepository, RoleRepository roleRepository) {
-        this.personRepository = personRepository;
-        this.reservationRepository = reservationRepository;
-        this.breakfastDateRepository = breakfastDateRepository;
-        this.roomRepository = roomRepository;
-        this.roleRepository = roleRepository;
-    }
+    private PersonRepository personRepository;
+    @Autowired
+    private ReservationRepository reservationRepository;
+    @Autowired
+    private BreakfastDateRepository breakfastDateRepository;
+    @Autowired
+    private RoomRepository roomRepository;
+    @Autowired
+    private RoleRepository roleRepository;
+
+
 
 
     @PostConstruct
@@ -41,10 +41,10 @@ public class InitServiceImpl {
         BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
         Random random = new Random();
         Person person = new Person("rekrutacja@pgs-soft.com", passwordEncoder.encode("rekrutacja"), "Mateusz Szymczak");
-        personRepository.insertOrUpdate(person);
+        personRepository.save(person);
 
         Role clientRole = new Role("CLIENT");
-        roleRepository.insertOrUpdate(clientRole);
+        roleRepository.save(clientRole);
 
 
         Calendar startTime = Calendar.getInstance();
@@ -52,7 +52,7 @@ public class InitServiceImpl {
         finishTime.add(Calendar.DAY_OF_MONTH, 7);
         Reservation reservation = new Reservation(new Date(startTime.getTimeInMillis()), new Date(finishTime.getTimeInMillis()), true);
         reservation.setPerson(person);
-        reservationRepository.insertOrUpdate(reservation);
+        reservationRepository.save(reservation);
         int randInt;
         for (int i = 0; i < 25; i++) {
             Room room = new Room(random.nextInt(4) + 1, WindowsOrientation.NORTH, 100f, randInt = random.nextInt(11));
@@ -77,23 +77,23 @@ public class InitServiceImpl {
             else
                 room.setWindowsOrientation(WindowsOrientation.WEST);
 
-            roomRepository.insertOrUpdate(room);
+            roomRepository.save(room);
         }
         clientRole.getPeople().add(person);
         person.getRoles().add(clientRole);
-        roleRepository.insertOrUpdate(clientRole);
-        personRepository.insertOrUpdate(person);
+        roleRepository.save(clientRole);
+        personRepository.save(person);
 
         BreakfastDate breakfastDate = new BreakfastDate(3, new Date(startTime.getTimeInMillis()));
         BreakfastDate breakfastDate2 = new BreakfastDate(2, new Date(finishTime.getTimeInMillis()));
         breakfastDate.setReservation(reservation);
         breakfastDate2.setReservation(reservation);
-        breakfastDateRepository.insertOrUpdate(breakfastDate);
-        breakfastDateRepository.insertOrUpdate(breakfastDate2);
+        breakfastDateRepository.save(breakfastDate);
+        breakfastDateRepository.save(breakfastDate2);
         reservation.getBreakfastDates().add(breakfastDate);
         reservation.getBreakfastDates().add(breakfastDate2);
-        reservationRepository.insertOrUpdate(reservation);
-        personRepository.insertOrUpdate(person);
+        reservationRepository.save(reservation);
+        personRepository.save(person);
         log.trace("Added sample data to BD");
     }
 }
